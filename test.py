@@ -3,7 +3,9 @@ import os
 import sys
 import struct
 import matplotlib.pyplot as plt
+from pylab import *
 
+rate = 44100
 
 def plot_wf(wf):
 	fig = plt.figure()
@@ -24,15 +26,29 @@ def window(frame):
 	w = np.hanning(len(frame))
 	return np.multiply(w,frame)
 
-#read_frame(4000)
-raw = read_frame(8000)
-wd = window(raw)
-####plot_wf(raw)
-#plot_wf(wd)
+def log_power_spectrum(frame):
+	return np.log(np.abs(np.fft.rfft(frame)))
 
-write_frame(raw)
-write_frame(wd)
+def split_frame(frame, nsamp, overlap):
+	i = 0
+	while True:
+		head = i*(nsamp - overlap)
+		if (head+nsamp)>len(frame):
+			return # truncate last subframe
+		yield frame[head:head+nsamp]
+		i += 1
 
-while True:
-	raw = read_frame(8000)
-	write_frame(window(raw))
+raw = read_frame(int(0.5*rate))
+raw = read_frame(1*rate)
+
+ps = []
+
+for subframe in split_frame(raw, int(.025*rate), int(.015*rate)):
+	w = window(subframe)
+	write_frame(w)
+	
+	ps += [log_power_spectrum(w)[0:200]]
+
+ps = np.transpose(ps)
+imshow(ps,origin="lower")
+show()
