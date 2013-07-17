@@ -4,6 +4,7 @@ import sys
 import struct
 import matplotlib.pyplot as plt
 from pylab import *
+from scipy import fftpack
 
 '''
 REFERENCES:
@@ -88,11 +89,12 @@ def filterbank_log_energies(filterbank,powerspec):
 raw = read_frame(int(0.5*rate))
 raw = read_frame(2*rate)
 
-fbf = make_mel_filterbank_funcs(400,10000,26)
+fbf = make_mel_filterbank_funcs(300,8000,26)
 fb = None
 
 ps = []
 fbes = []
+mfccs = []
 
 for subframe in split_frame(raw, int(.025*rate), int(.015*rate)):
 	w = window(subframe)
@@ -113,12 +115,17 @@ for subframe in split_frame(raw, int(.025*rate), int(.015*rate)):
 	#print >> sys.stderr, "FBE=", fbe
 	fbes += [fbe]
 
+	mfcc = fftpack.dct(fbe)[0:len(fbe)/2]
+	mfccs += [mfcc]
+
 
 
 
 ps = np.transpose(ps)
 ax1 = subplot(211)
-imshow(ps,origin="lower")
+#imshow(ps,origin="lower")
+imshow(np.log(np.transpose(mfccs)),origin="lower",interpolation="nearest")
+colorbar()
 subplot(212,sharex=ax1)
 imshow(np.transpose(fbes),origin="lower")
 #yticks(range(ps.shape[0]), get_spectrum_x_axis(ps.shape[1]))
