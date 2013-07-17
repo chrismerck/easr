@@ -31,8 +31,8 @@ def window(frame):
 	w = np.hanning(len(frame))
 	return np.multiply(w,frame)
 
-def log_power_spectrum(frame):
-	return np.log(np.abs(np.fft.rfft(frame)))
+def periodogram(frame):
+	return (np.abs(np.fft.rfft(frame))**2)/float(len(frame))
 
 def split_frame(frame, nsamp, overlap):
 	i = 0
@@ -77,15 +77,15 @@ def render_filterbank(filter_funcs, X):
 	  to evaludate the filter functions '''
 	return [ [ filter_func(x) for x in X ] for filter_func in filter_funcs]
 
-def filterbank_energies(filterbank,powerspec):
+def filterbank_log_energies(filterbank,powerspec):
 	fbe = []
 	for f in filterbank:
-		e = np.sum(np.multiply(f,powerspec))
+		e = np.log(np.sum(np.multiply(f,powerspec)))
 		fbe += [e]
 	return fbe
 
 
-#raw = read_frame(int(0.5*rate))
+raw = read_frame(int(0.5*rate))
 raw = read_frame(2*rate)
 
 fbf = make_mel_filterbank_funcs(400,10000,26)
@@ -98,7 +98,7 @@ for subframe in split_frame(raw, int(.025*rate), int(.015*rate)):
 	w = window(subframe)
 	write_frame(w)
 
-	p = log_power_spectrum(w)
+	p = periodogram(w)
 	ps += [p] #[50:200]] # save for plotting
 
 	if not fb:
@@ -109,7 +109,7 @@ for subframe in split_frame(raw, int(.025*rate), int(.015*rate)):
 			show()
 			'''
 	
-	fbe = filterbank_energies(fb,p)
+	fbe = filterbank_log_energies(fb,p)
 	#print >> sys.stderr, "FBE=", fbe
 	fbes += [fbe]
 
