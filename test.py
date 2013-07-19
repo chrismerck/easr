@@ -3,6 +3,7 @@ import os
 import sys
 import struct
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from pylab import *
 from scipy import fftpack
 
@@ -86,8 +87,8 @@ def filterbank_log_energies(filterbank,powerspec):
 	return fbe
 
 
-raw = read_frame(int(0.5*rate))
-raw = read_frame(2*rate)
+#jraw = read_frame(int(0.5*rate))
+raw = read_frame(4*rate)
 
 fbf = make_mel_filterbank_funcs(300,8000,26)
 fb = None
@@ -95,6 +96,10 @@ fb = None
 ps = []
 fbes = []
 mfccs = []
+
+mfccx = []
+mfccy = []
+
 
 for subframe in split_frame(raw, int(.025*rate), int(.015*rate)):
 	w = window(subframe)
@@ -116,17 +121,45 @@ for subframe in split_frame(raw, int(.025*rate), int(.015*rate)):
 	fbes += [fbe]
 
 	mfcc = fftpack.dct(fbe)[0:len(fbe)/2]
+
+
 	mfccs += [mfcc]
 
-
-
+	mfccx += [mfcc[0]]
+	mfccy += [mfcc[1]]
 
 ps = np.transpose(ps)
 ax1 = subplot(211)
 #imshow(ps,origin="lower")
-imshow(np.log(np.transpose(mfccs)),origin="lower",interpolation="nearest")
-colorbar()
+#imshow((np.transpose(mfccs)),origin="lower",interpolation="nearest")
+#colorbar()
+t = range(len(mfccx))
+plot(t,mfccx,t,mfccy)
 subplot(212,sharex=ax1)
 imshow(np.transpose(fbes),origin="lower")
 #yticks(range(ps.shape[0]), get_spectrum_x_axis(ps.shape[1]))
 show()
+
+'''
+anim_steps = 50
+
+def update_line(num, data, line):
+	frames = len(mfccx)
+	tmin = num*frames/(anim_steps)
+	tmax = (num+1)*frames/(anim_steps)
+
+	line.set_data(mfccx[tmin:tmax],mfccy[tmin:tmax])
+	print >> sys.stderr, num
+	return line,
+
+fig1 = plt.figure()
+data = np.random.rand(2,25)
+plt.xlim(np.min(mfccx),np.max(mfccx))
+plt.ylim(np.min(mfccy),np.max(mfccy))
+l, = plt.plot([],[],'r-')
+line_ani = animation.FuncAnimation(fig1, update_line, anim_steps, fargs=(data, l),
+		interval=50,blit=True)
+
+#plot(mfccx,mfccy)
+show()
+'''
