@@ -1,1 +1,1 @@
-cat scots.raw | python -i test.py #| play -t raw -e float -c 1 -b 32 -r44100 -
+python -i fextract.py #| play -t raw -e float -c 1 -b 32 -r48000 -
